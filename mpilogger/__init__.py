@@ -4,7 +4,9 @@ import time
 import logging
 import array
 import atexit
+from distutils.version import LooseVersion
 
+import mpi4py
 from mpi4py import MPI
 
 
@@ -146,7 +148,13 @@ if __name__ == '__main__':
 
         # Wait until any connection receives a message
         status_list = []
-        num_requests, ind_requests = MPI.Request.Testsome(requests, statuses=status_list)
+        ind_requests = MPI.Request.Testsome(requests, statuses=status_list)
+        # Request.Waitsome() and Request.Testsome() return None or list from mpi4py 2.0.0
+        if LooseVersion(mpi4py.__version__) >= LooseVersion('2.0.0'):
+            num_requests = len(ind_requests)
+        # older version of mpi4py
+        else:
+            num_requests, ind_requests = ind_requests
 
         # If a request has changed
         if num_requests > 0:
